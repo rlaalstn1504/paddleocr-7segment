@@ -1,0 +1,6 @@
+PaddleOCR
+assets
+config
+demo
+inference
+setup

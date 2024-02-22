@@ -1,0 +1,130 @@
+Global:
+  use_gpu: true # GPU 사용 여부
+  use_xpu: false
+  use_mlu: false
+  epoch_num: 1200  # 총 학습할 epoch 수
+  log_smooth_window: 20
+  print_batch_step: 10 # 10번의 배치 학습마다 정보 출력
+  save_model_dir: ./output/det/custom_det/
+  save_epoch_step: 1200
+  # evaluation is run every 2000 iterationsb
+  eval_batch_step: [0, 2000] # 2000 step 마다 평가 진행
+  cal_metric_during_train: False
+  pretrained_model: ./pretrain_models/ResNet50_vd_ssld_pretrained # 사용할 pretrained 모델 경로
+  checkpoints:
+  save_inference_dir:
+  use_visualdl: False
+  infer_img: doc/imgs_en/img_10.jpg
+  save_res_path: ./output/det_db/det_custom.txt
+
+Architecture:
+  model_type: det # 모델 유형 지정
+  algorithm: DB
+  Transform:
+  Backbone:
+    name: ResNet_vd # 백본 네트워크 이름
+    layers: 50
+  Neck:
+    name: DBFPN
+    out_channels: 256
+  Head:
+    name: DBHead
+    k: 50
+
+Loss:
+  name: DBLoss
+  balance_loss: true
+  main_loss_type: DiceLoss
+  alpha: 5
+  beta: 10
+  ohem_ratio: 3
+
+Optimizer:
+  name: Adam
+  beta1: 0.9
+  beta2: 0.999
+  lr:
+    learning_rate: 0.001 # 학습률
+  regularizer:
+    name: 'L2'
+    factor: 0
+
+PostProcess:
+  name: DBPostProcess
+  thresh: 0.3
+  box_thresh: 0.7
+  max_candidates: 1000
+  unclip_ratio: 1.5
+
+Metric:
+  name: DetMetric
+  main_indicator: hmean 
+
+Train:
+  dataset:
+    name: SimpleDataSet 
+    data_dir: /data/str/data/covered_images/images
+    label_file_list:
+      - /data/train_data/det/train/det_train.txt
+    ratio_list: [1.0]
+    transforms:
+      - DecodeImage: # load image
+          img_mode: BGR
+          channel_first: False
+      - DetLabelEncode: # Class handling label
+      - IaaAugment:
+          augmenter_args:
+            - { 'type': Fliplr, 'args': { 'p': 0.5 } }
+            - { 'type': Affine, 'args': { 'rotate': [-10, 10] } }
+            - { 'type': Resize, 'args': { 'size': [0.5, 3] } }
+      - EastRandomCropData:
+          size: [640, 640]
+          max_tries: 50
+          keep_ratio: true
+      - MakeBorderMap:
+          shrink_ratio: 0.4
+          thresh_min: 0.3
+          thresh_max: 0.7
+      - MakeShrinkMap:
+          shrink_ratio: 0.4
+          min_text_size: 8
+      - NormalizeImage:
+          scale: 1./255.
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+          order: 'hwc'
+      - ToCHWImage:
+      - KeepKeys:
+          keep_keys: ['image', 'threshold_map', 'threshold_mask', 'shrink_map', 'shrink_mask'] # the order of the dataloader list
+  loader:
+    shuffle: True
+    drop_last: False
+    batch_size_per_card: 16
+    num_workers: 4
+
+Eval:
+  dataset:
+    name: SimpleDataSet 
+    data_dir: /data/str/data/covered_images/images
+    label_file_list:
+      - /data/train_data/det/train/det_test.txt # 학습 레이블 파일 경로
+    transforms:
+      - DecodeImage: # load image
+          img_mode: BGR
+          channel_first: False
+      - DetLabelEncode: # Class handling label
+      - DetResizeForTest:
+          image_shape: [736, 1280]
+      - NormalizeImage:
+          scale: 1./255.
+          mean: [0.485, 0.456, 0.406]
+          std: [0.229, 0.224, 0.225]
+          order: 'hwc'
+      - ToCHWImage:
+      - KeepKeys:
+          keep_keys: ['image', 'shape', 'polys', 'ignore_tags']
+  loader:
+    shuffle: False # 데이터 셔플링 여부
+    drop_last: False
+    batch_size_per_card: 1 # must be 1
+    num_workers: 8

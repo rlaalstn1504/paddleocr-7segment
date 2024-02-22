@@ -1,0 +1,11 @@
+temp_image
+temp_image2
+temp_image3
+*.log
+*.pdparams
+*.pdiparams
+*.pdiparams.info
+*.pdmodel 
+inference_results/ 
+synthetic_data/ 
+colab/

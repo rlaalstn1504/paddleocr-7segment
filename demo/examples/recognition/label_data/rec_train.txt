@@ -1,0 +1,10 @@
+sample_data/recognition/image_data/03853.jpg	3810
+sample_data/recognition/image_data/03850.jpg	7000
+sample_data/recognition/image_data/03894.jpg	6200
+sample_data/recognition/image_data/03851.jpg	6240
+sample_data/recognition/image_data/03893.jpg	6270
+sample_data/recognition/image_data/01513.jpg	4650
+sample_data/recognition/image_data/03895.jpg	6550
+sample_data/recognition/image_data/03849.jpg	3600
+sample_data/recognition/image_data/01510.jpg	4590
+sample_data/recognition/image_data/01509.jpg	2020

@@ -1,0 +1,10 @@
+wandb
+easydict
+numpy
+tqdm
+scikit-learn
+opencv-python 
+matplotlib
+streamlit
+paddlepaddle-gpu
+paddleocr==2.7.0.2

@@ -1,0 +1,3 @@
+/data/str/data/cropped_images/images/03856.jpg	7300
+/data/str/data/cropped_images/images/01511.jpg	3440
+/data/str/data/cropped_images/images/03852.jpg	4520

@@ -1,0 +1,112 @@
+Global:
+  use_gpu: true # GPU를 사용할 지 설정
+  epoch_num: 100 # 총 학습할 epoch 수
+  log_smooth_window: 20
+  print_batch_step: 10  # 몇 배치마다 정보를 출력할 지 설정
+  save_model_dir: ./PaddleOCR/output/rec/custom_rec/ # 모델 저장 경로
+  save_epoch_step: 3 # 몇 epoch마다 모델을 저장할 지 설정 
+
+  # evaluation is run every 2000 iterations
+  eval_batch_step: [0, 100] # 몇 step마다 평가를 실행할 지 설정
+  cal_metric_during_train: True # 학습 도중에 metric을 계산할 지 여부
+  pretrained_model:  # 사전 학습된 모델의 경로 (빈칸이면 사용하지 않음)
+  checkpoints:
+  save_inference_dir:
+  use_visualdl: False # VisualDL 시각화 도구 사용 여부
+  use_wandb: True  # wandb 모니터링 도구 사용 여부
+  infer_img: # 추론할 이미지의 경로 
+  
+  # for data or label process
+  character_dict_path: ./PaddleOCR/ppocr/utils/en_dict.txt
+  max_text_length: 25  # 최대 텍스트 길이
+  num_heads: 8
+  infer_mode: False
+  use_space_char: False
+  save_res_path: #./output/rec/predicts_ic15.txt 
+
+Optimizer:
+  name: Adam # 최적화 알고리즘
+  beta1: 0.9
+  beta2: 0.999
+  clip_norm: 10.0
+  lr:
+    learning_rate: 0.0001
+
+Architecture:
+  model_type: rec # 모델 유형 (Recognition)
+  algorithm: SRN
+  in_channels: 1
+  Transform:
+  Backbone:
+    name: ResNetFPN # 백본 네트워크 이름
+  Head:
+    name: SRNHead # Head 네트워크 이름
+    max_text_length: 25
+    num_heads: 8
+    num_encoder_TUs: 2
+    num_decoder_TUs: 4
+    hidden_dims: 512
+
+Loss:
+  name: SRNLoss
+
+PostProcess:
+  name: SRNLabelDecode
+
+Metric:
+  name: RecMetric
+  main_indicator: acc
+
+Train:
+  dataset:
+    name: SimpleDataSet # 데이터셋 이름
+    data_dir: /workspace/computer-vision_object-detection_paddleocr/sample_data/recognition/image_data # 이미지 데이터 경로
+    label_file_list: ["/workspace/computer-vision_object-detection_paddleocr/sample_data/recognition/label_data/rec_train.txt"] # 레이블 파일 경로
+    transforms: # 데이터 전처리 및 증강
+      - DecodeImage: # load image
+          img_mode: BGR
+          channel_first: False
+      - SRNLabelEncode: # Class handling label
+      - SRNRecResizeImg:
+          image_shape: [1, 64, 256]
+      - KeepKeys:
+          keep_keys: ['image',
+                      'label',
+                      'length',
+                      'encoder_word_pos',
+                      'gsrm_word_pos',
+                      'gsrm_slf_attn_bias1',
+                      'gsrm_slf_attn_bias2'] # dataloader will return list in this order 
+                      
+  loader:
+    shuffle: False
+    batch_size_per_card: 2
+    drop_last: False
+    num_workers: 4 
+
+Eval:
+  dataset:
+    name: SimpleDataSet # 평가 데이터셋 이름
+    data_dir: /workspace/computer-vision_object-detection_paddleocr/sample_data/recognition/image_data  # 이미지 데이터 경로
+    label_file_list: ["/workspace/computer-vision_object-detection_paddleocr/sample_data/recognition/label_data/rec_valid.txt"]  # 검증 레이블 파일 경로
+    transforms:
+      - DecodeImage: # load image
+          img_mode: BGR
+          channel_first: False
+      - SRNLabelEncode: # Class handling label
+      - SRNRecResizeImg:
+          image_shape: [1, 64, 256]
+      - KeepKeys:
+          keep_keys: ['image',
+                      'label',
+                      'length',
+                      'encoder_word_pos',
+                      'gsrm_word_pos',
+                      'gsrm_slf_attn_bias1',
+                      'gsrm_slf_attn_bias2'] 
+  loader:
+    shuffle: False
+    drop_last: False
+    batch_size_per_card: 1
+    num_workers: 4
+    #use_shared_memory: False

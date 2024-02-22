@@ -1,0 +1,3 @@
+sample_data/detection/image_data/01511.jpg	[{"transcription":"3440",                         "points":[[913,750],                         [1520,721],                         [1520,930],                         [913,971]]}]
+sample_data/detection/image_data/03856.jpg	[{"transcription":"7300",                         "points":[[1187,1042],                         [1570,1049],                         [1570,1205],                         [1187,1190]]}]
+sample_data/detection/image_data/03852.jpg	[{"transcription":"4520",                         "points":[[1413,1183],                         [1561,1183],                         [1561,1234],                         [1413,1236]]}]
